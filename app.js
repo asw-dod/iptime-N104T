@@ -4,17 +4,9 @@ const axios = require('axios')
 const gateway = "http://192.168.42.1"
 
 const app = express()
+app.use(express.json());
+
 const port = 3000
-
-
-// VSList[num]="1;"+
-// f.name.value+";"+
-// f.i_port1.value+"-"+f.i_port2.value+";"+
-// f.protocol.value+";"+
-// GetIP("os_ip")+";"+
-// f.o_port1.value+";"+
-// "0;"+
-// ";";
 
 function makeCfg(text) {
     var ttt = String(text)
@@ -29,8 +21,8 @@ function makeCfg(text) {
         name: String(slice[0]).replace(/\'/g, ''),
         id: Number(slice[1]),
 
-        text: { 
-            name: t[1] ?? "", 
+        text: {
+            name: t[1] ?? "",
             sourcePort: t[2] ?? "",
             protocol: t[3] ?? "",
             ip: t[4] ?? "",
@@ -40,72 +32,279 @@ function makeCfg(text) {
     return result
 }
 
+// CMD: PORT_FORWARD
+// GO: natrouterconf_portforward.html
+// nowait: 1
+// SET0: 151323164=
+
+async function getCfg() {
+    const response = await axios.get(gateway + "/natrouterconf_portforward.html")
+    var data = response.data
+    var spt = data.split('\n')
+    var debg = spt.filter(item => item.startsWith("addCfg"));
+    var make = debg.map(item => makeCfg(item))
+
+    return make.filter(item => item.name.startsWith("VS"))
+}
+
 app.get('/port-foward', async (req, res) => {
     try {
-        const response = await axios.get(gateway + "/natrouterconf_portforward.html")
-        var data = response.data
-        var spt = data.split('\n')
-        var debg = spt.filter(item => item.startsWith("addCfg"));
-        var make = debg.map(item => makeCfg(item))
+        var make = await getCfg()
         var ports = make.filter(item => item.name.startsWith("VS"))
-        
-        var used = ports.filter(item => item.text.ip != '')
-        .map(item => {
-            // delete item.name
-            // delete item.id
-            return item.text
-        })
-        
 
-        res.json({max: 32, count: used.length,
+        var used = ports.filter(item => item.text.ip != '')
+            .map(item => {
+                delete item.name
+                return item
+            })
+
+        res.json({
+            max: 32, count: used.length,
             data: used
         })
 
     } catch (error) {
-        console.log(error)
+        res.json({
+            result: false,
+            error: "internal network error"
+        })
     }
 })
 
 app.get('/port-foward/:id', async (req, res) => {
     try {
-        const response = await axios.get(gateway + "/natrouterconf_portforward.html")
-
-        var data = response.data
-        var spt = data.split('\n')
-        var debg = spt.filter(item => item.startsWith("addCfg"));
-        var make = debg.map(item => makeCfg(item))
-        
-        var ports = make.filter(item => item.name.startsWith("VS"))
+        var ports = await getCfg()
         var used = ports.filter(item => item.text.ip != '')
-        
         var paramId = req.params.id
-        
-        if (!(0<= paramId && paramId < used.length)) { 
+
+        var idx = used.findIndex(item => item.id == paramId)
+
+        if (idx == -1) {
             res.json({
                 result: false,
                 error: "index error"
             })
             return
         }
-        
-        var user = ports[paramId]
-        delete user.name
-        
+
+        var user = ports[idx]
+        // delete user.name
+
         res.json({
             result: user.text
         })
 
     } catch (error) {
-        console.log(error)
+        res.json({
+            result: false,
+            error: "internal network error"
+        })
     }
 })
 
-app.post('/port-foward')
+app.post('/port-foward', async (req, res) => {
+    try {
+        var ports = await getCfg()
+        var used = ports.filter(item => item.text.ip != '')
+        var remain = ports.filter(item => item.text.ip == '')
+
+        // 151323164=1;rdp;2222-2222;tcp/udp;192.168.42.131;3333;0;;
+        var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
+
+        if (req.body.length <= 0) {
+            res.json({
+                result: false,
+                error: "not found request items"
+            })
+            return
+        } else if (remain.length < req.body.length) {
+            res.json({
+                result: false,
+                error: "not remian items"
+            })
+            return
+        } else if (used.length >= 32) {
+            res.json({
+                result: false,
+                error: "max count"
+            })
+            return
+        }
+
+        for (var i = 0; i < req.body.length; i++) {
+            var elem = ''
+
+            elem = remain[i].id + "=1;" + req.body[i].name + ";" + req.body[i].sourcePort + ";" +
+                req.body[i].protocol + ';' + req.body[i].ip + ';' + req.body[i].destPort + ';0;;'
+
+            makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
+        }
+
+        await axios.post(gateway + "/do_cmd.htm", makeText)
+        var getNewList = await getCfg();
+        var list = getNewList.slice(ports.length, ports.length + req.body.length)
+        var ppp = list.map(item => {
+            delete item.name
+            return item
+        })
+
+        res.json({
+            result: ppp
+        })
+
+    } catch (error) {
+        res.json({
+            result: false,
+            error: "internal network error"
+        })
+    }
+})
+
+app.delete('/port-foward/:id', async (req, res) => {
+    try {
+        var ports = await getCfg()
+        var idx = ports.filter(item => item.text.ip != '')
+            .findIndex(item => item.id == req.params.id)
+
+        if (idx == -1) {
+            res.json({
+                result: false,
+                error: "index error"
+            })
+            return
+        }
+
+        var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
+
+        var elem = req.params.id
+        makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
+
+        await axios.post(gateway + "/do_cmd.htm", makeText)
+        var getNewList = await getCfg();
+        var ppp = getNewList.map(item => {
+            delete item.name
+            return item
+        })
+
+        res.json({
+            result: ppp
+        })
+
+    } catch (error) {
+        res.json({
+            result: false,
+            error: "internal network error"
+        })
+    }
+})
+
+app.delete('/port-foward', async (req, res) => {
+    try {
+        var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
+        console.log(req.body)
+
+        if (req.body.data.length <= 0) {
+            res.json({
+                result: false,
+                error: "not found request items"
+            })
+            return
+        }
+
+        for (var i = 0; i < req.body.data.length; i++) {
+            var elem = ''
+            elem = req.body.data[i] + "=";
+            makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
+        }
+
+        await axios.post(gateway + "/do_cmd.htm", makeText)
+        var getNewList = await getCfg();
+        var ppp = getNewList.map(item => {
+            delete item.name
+            return item
+        })
+
+        res.json({
+            result: ppp
+        })
+
+    } catch (error) {
+        res.json({
+            result: false,
+            error: "internal network error"
+        })
+    }
+})
+
+app.put('/port-forward/:id', async (req, res) => {
+    try {
+        var ports = await getCfg()
+        var idx = ports.filter(item => item.text.ip != '')
+            .findIndex(item => item.id == req.params.id)
+
+        if (idx == -1) {
+            res.json({
+                result: false,
+                error: "index error"
+            })
+            return
+        }
+
+        var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
+
+        if (req.body.length <= 0) {
+            res.json({
+                result: false,
+                error: "not found request items"
+            })
+            return
+        } else if (remain.length < req.body.length) {
+            res.json({
+                result: false,
+                error: "not remian items"
+            })
+            return
+        } else if (used.length >= 32) {
+            res.json({
+                result: false,
+                error: "max count"
+            })
+            return
+        }
+
+        var elem = ''
+
+        elem = remain.id + "=1;" + req.body.name + ";" + req.body.sourcePort + ";" +
+            req.body.protocol + ';' + req.body.ip + ';' + req.body.destPort + ';0;;'
+
+        makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
+
+        await axios.post(gateway + "/do_cmd.htm", makeText)
+        var getNewList = await getCfg();
+        var list = getNewList.slice(ports.length, ports.length + req.body.length)
+        var ppp = list.map(item => {
+            delete item.name
+            return item
+        })
+
+        res.json({
+            result: ppp
+        })
+
+    } catch (error) {
+        res.json({
+            result: false,
+            error: "internal network error"
+        })
+    }
+})
 
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
 })
+
+// app.use(bodyParser.urlencoded({extended : true}));
 
 app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`)

@@ -19,6 +19,7 @@
   "homepage": "https://github.com/asw-dod/iptime-N104T#readme",
   "dependencies": {
     "axios": "^0.24.0",
+    "body-parser": "^1.19.0",
     "express": "^4.17.1"
   }
 }
