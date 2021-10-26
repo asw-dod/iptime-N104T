@@ -108,7 +108,6 @@ app.post('/port-foward', async (req, res) => {
         var used = ports.filter(item => item.text.ip != '')
         var remain = ports.filter(item => item.text.ip == '')
 
-        // 151323164=1;rdp;2222-2222;tcp/udp;192.168.42.131;3333;0;;
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
 
         if (req.body.length <= 0) {
@@ -140,17 +139,14 @@ app.post('/port-foward', async (req, res) => {
             makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B') + "&"
         }
 
-        console.log(makeText);
         await axios.post(gateway + "/do_cmd.htm", makeText)
         var getNewList = await getCfg();
-        console.log(getNewList);
         var list = getNewList.slice(used.length, used.length + req.body.length)
         var ppp = list.map(item => {
             delete item.name
             return item
         })
 
-        console.log(ppp);
         res.json({
             result: ppp
         })
@@ -176,10 +172,8 @@ app.delete('/port-foward/:id', async (req, res) => {
                 return
             }
             
-            console.log(3333)
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
         makeText += 'SET0=' + req.params.id + "%3D"
-        console.log(makeText);
         await axios.post(gateway + "/do_cmd.htm", makeText)
         var getNewList = await getCfg();
         var ppp = getNewList.map(item => {
@@ -202,7 +196,6 @@ app.delete('/port-foward/:id', async (req, res) => {
 app.delete('/port-foward', async (req, res) => {
     try {
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
-        console.log(req.body)
 
 
         if (req.body.data.length <= 0) {
@@ -279,11 +272,6 @@ app.put('/port-foward/:id', async (req, res) => {
             error: "internal network error"
         })
     }
-})
-
-
-app.get('/', (req, res) => {
-    res.send('Hello World!')
 })
 
 // app.use(bodyParser.urlencoded({extended : true}));
