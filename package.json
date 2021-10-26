@@ -1,0 +1,24 @@
+{
+  "name": "rest-iptime",
+  "version": "1.0.0",
+  "description": "asw-dod iptime server",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asw-dod/iptime-N104T.git"
+  },
+  "author": "chacha",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/asw-dod/iptime-N104T/issues"
+  },
+  "homepage": "https://github.com/asw-dod/iptime-N104T#readme",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "express": "^4.17.1"
+  }
+}
