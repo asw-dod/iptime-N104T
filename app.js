@@ -137,17 +137,20 @@ app.post('/port-foward', async (req, res) => {
             elem = remain[i].id + "=1;" + req.body[i].name + ";" + req.body[i].sourcePort + ";" +
                 req.body[i].protocol + ';' + req.body[i].ip + ';' + req.body[i].destPort + ';0;;'
 
-            makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
+            makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B') + "&"
         }
 
+        console.log(makeText);
         await axios.post(gateway + "/do_cmd.htm", makeText)
         var getNewList = await getCfg();
-        var list = getNewList.slice(ports.length, ports.length + req.body.length)
+        console.log(getNewList);
+        var list = getNewList.slice(used.length, used.length + req.body.length)
         var ppp = list.map(item => {
             delete item.name
             return item
         })
 
+        console.log(ppp);
         res.json({
             result: ppp
         })
@@ -165,20 +168,18 @@ app.delete('/port-foward/:id', async (req, res) => {
         var ports = await getCfg()
         var idx = ports.filter(item => item.text.ip != '')
             .findIndex(item => item.id == req.params.id)
-
-        if (idx == -1) {
-            res.json({
-                result: false,
-                error: "index error"
-            })
-            return
-        }
-
+            if (idx == -1) {
+                res.json({
+                    result: false,
+                    error: "index error"
+                })
+                return
+            }
+            
+            console.log(3333)
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
-
-        var elem = req.params.id
-        makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
-
+        makeText += 'SET0=' + req.params.id + "%3D"
+        console.log(makeText);
         await axios.post(gateway + "/do_cmd.htm", makeText)
         var getNewList = await getCfg();
         var ppp = getNewList.map(item => {
@@ -187,7 +188,7 @@ app.delete('/port-foward/:id', async (req, res) => {
         })
 
         res.json({
-            result: ppp
+            result: ppp.filter(item => item.text.ip != '')
         })
 
     } catch (error) {
@@ -203,6 +204,7 @@ app.delete('/port-foward', async (req, res) => {
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
         console.log(req.body)
 
+
         if (req.body.data.length <= 0) {
             res.json({
                 result: false,
@@ -214,7 +216,7 @@ app.delete('/port-foward', async (req, res) => {
         for (var i = 0; i < req.body.data.length; i++) {
             var elem = ''
             elem = req.body.data[i] + "=";
-            makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
+            makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B') + "&"
         }
 
         await axios.post(gateway + "/do_cmd.htm", makeText)
@@ -225,7 +227,7 @@ app.delete('/port-foward', async (req, res) => {
         })
 
         res.json({
-            result: ppp
+            result: ppp.filter(item => item.text.ip != '')
         })
 
     } catch (error) {
@@ -236,7 +238,7 @@ app.delete('/port-foward', async (req, res) => {
     }
 })
 
-app.put('/port-forward/:id', async (req, res) => {
+app.put('/port-foward/:id', async (req, res) => {
     try {
         var ports = await getCfg()
         var idx = ports.filter(item => item.text.ip != '')
@@ -251,44 +253,24 @@ app.put('/port-forward/:id', async (req, res) => {
         }
 
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
-
-        if (req.body.length <= 0) {
-            res.json({
-                result: false,
-                error: "not found request items"
-            })
-            return
-        } else if (remain.length < req.body.length) {
-            res.json({
-                result: false,
-                error: "not remian items"
-            })
-            return
-        } else if (used.length >= 32) {
-            res.json({
-                result: false,
-                error: "max count"
-            })
-            return
-        }
+        
 
         var elem = ''
 
-        elem = remain.id + "=1;" + req.body.name + ";" + req.body.sourcePort + ";" +
+        elem = req.params.id + "=1;" + req.body.name + ";" + req.body.sourcePort + ";" +
             req.body.protocol + ';' + req.body.ip + ';' + req.body.destPort + ';0;;'
 
-        makeText += 'SET' + i + "=" + elem.replace(/=/g, '%3D').replace(/;/g, '%3B')
+        makeText += 'SET0=' + elem.replace(/=/g, '%3D').replace(/;/g, '%3B') + "&"
 
         await axios.post(gateway + "/do_cmd.htm", makeText)
         var getNewList = await getCfg();
-        var list = getNewList.slice(ports.length, ports.length + req.body.length)
-        var ppp = list.map(item => {
-            delete item.name
-            return item
-        })
+        var idx2 = getNewList.findIndex(item => item.id == req.params.id)
+        var capture = getNewList[idx2]
+        delete capture.name
+        
 
         res.json({
-            result: ppp
+            result: capture
         })
 
     } catch (error) {
