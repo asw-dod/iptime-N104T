@@ -1,5 +1,8 @@
 const express = require('express')
 const axios = require('axios')
+const nodemailer = require('nodemailer');
+const smtpTransport = require('nodemailer-smtp-transport');
+require('dotenv').config();
 
 const gateway = "http://192.168.42.1"
 
@@ -7,6 +10,33 @@ const app = express()
 app.use(express.json());
 
 const port = 3000
+
+function mailMaker(title, body) {
+    var transporter = nodemailer.createTransport(smtpTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        auth: {
+          user: process.env.GmailId,
+          pass: process.env.GmailPw
+        }
+      }));
+       
+      var mailOptions = {
+        from: process.env.EmailSender,
+        to: process.env.EmailReceiver,
+        subject: '[DoD Server] ' + title,
+        text: body
+      };
+       
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });  
+}
+
 
 function makeCfg(text) {
     var ttt = String(text)
@@ -47,6 +77,7 @@ async function getCfg() {
     return make.filter(item => item.name.startsWith("VS"))
 }
 
+
 app.get('/port-foward', async (req, res) => {
     try {
         var make = await getCfg()
@@ -57,6 +88,8 @@ app.get('/port-foward', async (req, res) => {
                 delete item.name
                 return item
             })
+        
+        console.log("[Get] : port-foward")
 
         res.json({
             max: 32, count: used.length,
@@ -89,7 +122,8 @@ app.get('/port-foward/:id', async (req, res) => {
 
         var user = ports[idx]
         // delete user.name
-
+        console.log("[Get] : port-foward/" + paramId)
+        
         res.json({
             result: user.text
         })
@@ -147,6 +181,10 @@ app.post('/port-foward', async (req, res) => {
             return item
         })
 
+        console.log("[Post] : port-foward/")
+        console.log("[Post] : " + JSON.stringify(ppp))
+
+        mailMaker("새로운 포트 포워딩이 추가가 되었습니다.", JSON.stringify(req.body))
         res.json({
             result: ppp
         })
@@ -181,6 +219,12 @@ app.delete('/port-foward/:id', async (req, res) => {
             return item
         })
 
+        console.log("[delete] : port-foward/" + req.params.id)
+        console.log("[delete] : " + JSON.stringify(ports))
+        console.log("[delete] : " + JSON.stringify(getNewList))
+        
+        mailMaker("포트 포워딩이 삭제 되었습니다.", JSON.stringify(ports[idx]))
+
         res.json({
             result: ppp.filter(item => item.text.ip != '')
         })
@@ -196,7 +240,6 @@ app.delete('/port-foward/:id', async (req, res) => {
 app.delete('/port-foward', async (req, res) => {
     try {
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
-
 
         if (req.body.data.length <= 0) {
             res.json({
@@ -218,6 +261,10 @@ app.delete('/port-foward', async (req, res) => {
             delete item.name
             return item
         })
+
+        mailMaker("포트 포워딩이 일괄 삭제 되었습니다.", JSON.stringify(req.body))
+        console.log("[delete] : port-foward/" + JSON.stringify(req.body.data))
+        console.log("[delete] : port-foward/" + JSON.stringify(ppp))
 
         res.json({
             result: ppp.filter(item => item.text.ip != '')
@@ -261,6 +308,10 @@ app.put('/port-foward/:id', async (req, res) => {
         var capture = getNewList[idx2]
         delete capture.name
         
+        console.log("[put] : port-foward/" + req.params.id)
+        console.log('[put] : ' + makeText)
+
+        mailMaker("포트 포워딩이 수정 되었습니다.", JSON.stringify(req.body))
 
         res.json({
             result: capture
