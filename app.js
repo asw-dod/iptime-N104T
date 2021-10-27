@@ -1,8 +1,7 @@
 const express = require('express')
 const axios = require('axios')
-const nodemailer = require('nodemailer');
-const smtpTransport = require('nodemailer-smtp-transport');
 require('dotenv').config();
+const mailsss = require('./email.js')
 
 const gateway = "http://192.168.42.1"
 
@@ -12,31 +11,8 @@ app.use(express.json());
 const port = 3000
 
 function mailMaker(title, body) {
-    var transporter = nodemailer.createTransport(smtpTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
-        auth: {
-          user: process.env.GmailId,
-          pass: process.env.GmailPw
-        }
-      }));
-       
-      var mailOptions = {
-        from: process.env.EmailSender,
-        to: process.env.EmailReceiver,
-        subject: '[DoD Server] ' + title,
-        text: body
-      };
-       
-      transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-          console.log(error);
-        } else {
-          console.log('Email sent: ' + info.response);
-        }
-      });  
+    mailsss.sendEmailEvent(process.env.EmailSender, process.env.EmailReceiver, title, body);       
 }
-
 
 function makeCfg(text) {
     var ttt = String(text)
