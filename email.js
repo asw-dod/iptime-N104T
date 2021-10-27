@@ -2,6 +2,7 @@ const fs = require('fs');
 const readline = require('readline');
 const {google} = require('googleapis');
 const {encode} = require('js-base64')
+require('dotenv').config();
 
 // If modifying these scopes, delete token.json.
 // const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
@@ -9,16 +10,16 @@ const SCOPES = ['https://mail.google.com/']
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
-const TOKEN_PATH = 'token.json';
+const TOKEN_PATH = process.env.Token;
 
 exports.sendEmailEvent = function (to, from, subject, message){
 // Load client secrets from a local file.
-    fs.readFile('credentials.json', (err, content) => {
+    fs.readFile(process.env.Credentials, (err, content) => {
     if (err) return console.log('Error loading client secret file:', err);
     // Authorize a client with credentials, then call the Gmail API.
     authorize(JSON.parse(content), function(auth) { 
         // listLabels(auth, to, from, subject, message)
-        listLabels(auth, "aoikazto@gmail.com", "aoikazto@naver.com", subject, message)
+        listLabels(auth, to, from, subject, message)
     });
   });
 }
