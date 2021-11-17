@@ -120,3 +120,4 @@ dist
 .pnp.*
 credentials.json
 token.json
+.DS_Store
