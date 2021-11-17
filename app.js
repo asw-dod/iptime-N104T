@@ -1,18 +1,13 @@
 const express = require('express')
 const axios = require('axios')
 require('dotenv').config();
-const mailsss = require('./email.js')
 
-const gateway = "http://192.168.42.1"
+const gateway = process.env.GatewayIP
 
 const app = express()
 app.use(express.json());
 
-const port = 3000
-
-function mailMaker(title, body) {
-    mailsss.sendEmailEvent(process.env.EmailSender, process.env.EmailReceiver, title, body);       
-}
+const port =  process.env.ExposePort
 
 function makeCfg(text) {
     var ttt = String(text)
@@ -160,7 +155,7 @@ app.post('/port-foward', async (req, res) => {
         console.log("[Post] : port-foward/")
         console.log("[Post] : " + JSON.stringify(ppp))
 
-        mailMaker("새로운 포트 포워딩이 추가가 되었습니다.", JSON.stringify(req.body))
+        // ////mailMaker("새로운 포트 포워딩이 추가가 되었습니다.", JSON.stringify(req.body))
         res.json({
             result: ppp
         })
@@ -199,7 +194,7 @@ app.delete('/port-foward/:id', async (req, res) => {
         console.log("[delete] : " + JSON.stringify(ports))
         console.log("[delete] : " + JSON.stringify(getNewList))
         
-        mailMaker("포트 포워딩이 삭제 되었습니다.", JSON.stringify(ports[idx]))
+        //////mailMaker("포트 포워딩이 삭제 되었습니다.", JSON.stringify(ports[idx]))
 
         res.json({
             result: ppp.filter(item => item.text.ip != '')
@@ -238,7 +233,7 @@ app.delete('/port-foward', async (req, res) => {
             return item
         })
 
-        mailMaker("포트 포워딩이 일괄 삭제 되었습니다.", JSON.stringify(req.body))
+        ////mailMaker("포트 포워딩이 일괄 삭제 되었습니다.", JSON.stringify(req.body))
         console.log("[delete] : port-foward/" + JSON.stringify(req.body.data))
         console.log("[delete] : port-foward/" + JSON.stringify(ppp))
 
@@ -287,7 +282,7 @@ app.put('/port-foward/:id', async (req, res) => {
         console.log("[put] : port-foward/" + req.params.id)
         console.log('[put] : ' + makeText)
 
-        mailMaker("포트 포워딩이 수정 되었습니다.", JSON.stringify(req.body))
+        ////mailMaker("포트 포워딩이 수정 되었습니다.", JSON.stringify(req.body))
 
         res.json({
             result: capture
