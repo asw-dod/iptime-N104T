@@ -49,7 +49,7 @@ async function getCfg() {
 }
 
 
-app.get('/port-foward', async (req, res) => {
+app.get('/port-forward', async (req, res) => {
     try {
         var make = await getCfg()
         var ports = make.filter(item => item.name.startsWith("VS"))
@@ -75,7 +75,7 @@ app.get('/port-foward', async (req, res) => {
     }
 })
 
-app.get('/port-foward/:id', async (req, res) => {
+app.get('/port-forward/:id', async (req, res) => {
     try {
         var ports = await getCfg()
         var used = ports.filter(item => item.text.ip != '')
@@ -107,7 +107,7 @@ app.get('/port-foward/:id', async (req, res) => {
     }
 })
 
-app.post('/port-foward', async (req, res) => {
+app.post('/port-forward', async (req, res) => {
     try {
         var ports = await getCfg()
         var used = ports.filter(item => item.text.ip != '')
@@ -168,7 +168,7 @@ app.post('/port-foward', async (req, res) => {
     }
 })
 
-app.delete('/port-foward/:id', async (req, res) => {
+app.delete('/port-forward/:id', async (req, res) => {
     try {
         var ports = await getCfg()
         var idx = ports.filter(item => item.text.ip != '')
@@ -208,7 +208,7 @@ app.delete('/port-foward/:id', async (req, res) => {
     }
 })
 
-app.delete('/port-foward', async (req, res) => {
+app.delete('/port-forward', async (req, res) => {
     try {
         var makeText = "CMD=PORT_FORWARD&GO=natrouterconf_portforward.html&nowait=1&"
 
@@ -249,7 +249,7 @@ app.delete('/port-foward', async (req, res) => {
     }
 })
 
-app.put('/port-foward/:id', async (req, res) => {
+app.put('/port-forward/:id', async (req, res) => {
     try {
         var ports = await getCfg()
         var idx = ports.filter(item => item.text.ip != '')
