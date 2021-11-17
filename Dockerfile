@@ -1,5 +1,7 @@
 FROM node:14-alpine
 
+LABEL maintainer=aoikazto
+
 WORKDIR /usr/src/app
 COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
 RUN npm install
