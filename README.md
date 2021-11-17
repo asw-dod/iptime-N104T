@@ -45,15 +45,15 @@ $ npm run start
 모든 통신에는 Authorization이 따로 존재 하지 않음.
 
 ```txt
-GET/ http://localhost:3000/port-foward
-GET/ http://localhost:3000/port-foward/{id}
+GET/ http://localhost:3000/port-forward
+GET/ http://localhost:3000/port-forward/{id}
 
-POST/ http://localhost:3000/port-foward
+POST/ http://localhost:3000/port-forward
 
-PUT/ http://localhost:3000/port-foward/{id}
+PUT/ http://localhost:3000/port-forward/{id}
 
-DELETE/ http://localhost:3000/port-foward
-DELETE/ http://localhost:3000/port-foward/{id}
+DELETE/ http://localhost:3000/port-forward
+DELETE/ http://localhost:3000/port-forward/{id}
 ```
 
 ### GET 메소드 
