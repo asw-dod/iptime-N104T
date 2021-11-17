@@ -30,7 +30,9 @@ $ npm run start
   -  일괄 삭제
   -  일괄 추가
 
-## 옵션
+## 옵션 
+
+> .env 파일에서 수정이 가능함.
 
 - GatewayIP 주소
   - 예) http://192.168.0.1
@@ -42,7 +44,7 @@ $ npm run start
 
 모든 통신에는 Authorization이 따로 존재 하지 않음.
 
-```http
+```txt
 GET/ http://localhost:3000/port-foward
 GET/ http://localhost:3000/port-foward/{id}
 
